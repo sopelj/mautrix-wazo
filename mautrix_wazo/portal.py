@@ -43,9 +43,6 @@ class Portal(DBPortal, BasePortal):
     def bridge_info(self) -> dict[str, Any]:
         pass
 
-    async def delete(self) -> None:
-        pass
-
     @classmethod
     async def get_by_wazo_room_id(cls, room_id: WazoRoomId, create=True):
         try:

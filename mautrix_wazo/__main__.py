@@ -4,6 +4,7 @@ from mautrix.bridge import Bridge, BaseUser, BasePortal, BasePuppet
 from mautrix.types import RoomID, UserID
 
 from . import __version__ as version
+from .db import init as init_db, upgrade_table
 from .config import Config
 from .matrix import MatrixHandler
 
@@ -18,9 +19,14 @@ class WazoBridge(Bridge):
     markdown_version = f'[{version}](https://github.com/sopelj/mautrix-wazo/releases/tag/{version})'
     config_class = Config
     matrix_class = MatrixHandler
+    upgrade_table = upgrade_table
 
     config: Config
     matrix: MatrixHandler
+
+    def prepare_db(self) -> None:
+        super().prepare_db()
+        init_db(self.db)
 
     async def get_user(self, user_id: UserID, create: bool = True) -> BaseUser | None:
         pass
@@ -39,3 +45,6 @@ class WazoBridge(Bridge):
 
     async def count_logged_in_users(self) -> int:
         pass
+
+
+WazoBridge().run()

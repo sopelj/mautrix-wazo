@@ -2,7 +2,7 @@ from dataclasses import dataclass
 from datetime import datetime
 from typing import NewType, List
 
-WazoID = NewType("WazoID", int)
+WazoUUID = NewType("WazoUUID", str)
 
 WazoEventId = NewType("WazoEventId", str)
 

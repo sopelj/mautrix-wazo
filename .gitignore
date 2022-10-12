@@ -1,3 +1,8 @@
 env/
 .idea/
 .code
+__pycache__/
+config.yaml
+bridge.db
+*.log
+registration.yaml
