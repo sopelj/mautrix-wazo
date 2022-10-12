@@ -5,12 +5,12 @@ import fastapi
 import pydantic
 import uvicorn
 
-from mautrix_wazo.wazo.handler import WazoWebhookHandler, WazoMessage, WazoEventId, WazoUserId, WazoRoomId
+from mautrix_wazo.wazo.handler import WazoWebhookHandler
+from mautrix_wazo.types import WazoMessage, WazoRoomId, WazoEventId, WazoUserId
 
 app = fastapi.FastAPI(
 
 )
-
 
 
 class WazoHookMessageData(pydantic.BaseModel):

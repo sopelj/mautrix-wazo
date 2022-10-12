@@ -1,3 +1,4 @@
+from __future__ import annotations
 from typing import Any, List
 
 from mautrix import bridge as br
@@ -5,9 +6,8 @@ from mautrix.bridge import BasePortal, BasePuppet
 from mautrix.types import MessageEventContent, EventID
 
 from .db.portal import Portal as DBPortal
-from .types import WazoMessage, WazoUserId
+from .types import WazoMessage, WazoUserId, WazoRoomId
 from .user import User
-from .wazo.handler import WazoRoomId
 
 
 class Store:
@@ -17,7 +17,7 @@ class Store:
     _wazo_rooms: dict
     _users: dict
 
-    def get_portal(self, wazo_room_id) -> Portal:
+    def get_portal(self, wazo_room_id):
         return self._wazo_rooms[wazo_room_id]
 
 
