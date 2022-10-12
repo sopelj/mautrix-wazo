@@ -1,9 +1,16 @@
+from __future__ import annotations
+
 from mautrix import bridge as br
 from mautrix.bridge import BaseUser, BasePortal, BasePuppet
 from mautrix.types import UserID, RoomID
 from mautrix.util.bridge_state import BridgeState
 
 from .db.user import User as DBUser
+from .types import WazoUserId
+
+
+class UserError(Exception):
+    pass
 
 
 class User(DBUser, BaseUser):
@@ -21,4 +28,12 @@ class User(DBUser, BaseUser):
 
     async def get_bridge_states(self) -> list[BridgeState]:
         pass
+
+    @classmethod
+    def get_by_wazo_id(cls, wazo_user_id: WazoUserId, create=True):
+        # TODO: get or create/register a user object representing a wazo and matrix user
+        if create:
+            return cls(wazo_id=wazo_user_id)
+        else:
+            raise UserError
 
