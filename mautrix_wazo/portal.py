@@ -143,6 +143,7 @@ class Portal(DBPortal, BasePortal):
             room_id = await self.main_intent.create_room(name=name)
             self.mxid = room_id
             self.by_mxid[room_id] = self
+            await self.save()
 
         if participants:
             assert source.mxid in participants
