@@ -18,6 +18,8 @@ class Puppet:
     last_name: str
     username: str
 
+    custom_mxid = None
+
     columns = 'wazo_uuid, first_name, last_name, username'
 
     async def insert(self) -> None:
