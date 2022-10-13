@@ -136,6 +136,8 @@ class Puppet(DBPuppet, BasePuppet):
             first_name=user_info['firstname'],
             last_name=user_info['lastname'],
             username=user_info['username'] or user_info['email'],
+            is_registered=False,
+            custom_mxid='',
         )
         await puppet.insert()
         cls.by_uuid[wazo_uuid] = puppet
