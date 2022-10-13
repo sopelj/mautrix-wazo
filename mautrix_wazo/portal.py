@@ -139,6 +139,7 @@ class Portal(DBPortal, BasePortal):
 
     async def create_matrix_room(self, source: User, participants: list[UserID] = None, name=None):
         assert self.wazo_uuid
+        await self._postinit()
 
         # actually create a new matrix room
         initial_state = [
