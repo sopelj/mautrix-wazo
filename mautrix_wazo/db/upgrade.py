@@ -23,7 +23,9 @@ async def upgrade_latest(conn: Connection) -> None:
             wazo_uuid     TEXT PRIMARY KEY,
             first_name    TEXT,
             last_name     TEXT,
-            username      TEXT
+            username      TEXT,
+            is_registered BOOLEAN NOT NULL DEFAULT false,
+            custom_mxid  TEXT
         )"""
     )
     await conn.execute(
