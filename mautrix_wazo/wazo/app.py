@@ -1,17 +1,15 @@
 import datetime
+import os
 from typing import List
 
-import fastapi
+from aiohttp import web
 import pydantic
 import uvicorn
 
 from mautrix_wazo.wazo.handler import WazoWebhookHandler
 from mautrix_wazo.types import WazoMessage, WazoUUID
 
-app = fastapi.FastAPI(
-
-)
-
+app = web.Application()
 
 class WazoRoomData(pydantic.BaseModel):
     uuid: str
@@ -55,9 +53,11 @@ def wazo_handler_provider() -> WazoWebhookHandler:
     return WazoWebhookHandler()
 
 
-@app.post("/messages")
-async def receive_message(data: WazoHookMessageData, handler: WazoWebhookHandler = fastapi.Depends(wazo_handler_provider)):
-    print("data=", data)
+async def receive_message(request: web.Request):
+    body = await request.json()
+    data = WazoHookMessageData.parse_obj(body)
+    app.logger.info("Received request")
+    handler = wazo_handler_provider()
     # data = WazoHookMessageData.parse_obj(body)
     await handler.handle_message(WazoMessage(
         event_id=WazoUUID(data.uuid),
@@ -72,8 +72,9 @@ async def receive_message(data: WazoHookMessageData, handler: WazoWebhookHandler
     ))
 
 
-async def serve():
-    """Start the server using uvicorn"""
-    config = uvicorn.Config(app, host='0.0.0.0', port=5000, log_level="info")
-    server = uvicorn.Server(config)
-    await server.serve()
+app.add_routes([web.RouteDef("post", "/messages", receive_message, kwargs={})])
+
+
+def get_site(runner):
+    return web.TCPSite(runner, os.getenv("HOST", "0.0.0.0"), os.getenv("PORT", 8000))
+

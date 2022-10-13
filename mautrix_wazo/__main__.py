@@ -1,13 +1,17 @@
 from __future__ import annotations
 
+import os
+
+from aiohttp import web
 from mautrix.bridge import Bridge, BaseUser, BasePortal, BasePuppet
 from mautrix.types import RoomID, UserID
 
-from . import __version__ as version
 from .db import init as init_db, upgrade_table
 from .config import Config
 from .matrix import MatrixHandler
 from .wazo import app as wazo_app
+from . import __version__ as version
+
 
 class WazoBridge(Bridge):
     name = "mautrix-wazo"
@@ -47,7 +51,18 @@ class WazoBridge(Bridge):
         pass
 
     async def start(self) -> None:
-        self.add_startup_actions(wazo_app.serve())
+        runner = web.AppRunner(wazo_app.app)
+
+        async def wazo_http_startup():
+            self.log.info("Starting wazo webhook server")
+            await runner.setup()
+            site = web.TCPSite(runner, os.getenv("HOST", "0.0.0.0"), os.getenv("PORT", 8000))
+
+            await site.start()
+            self.log.debug("Wazo webhook server site: %s", site.name)
+
+        self.add_startup_actions(wazo_http_startup())
+        self.add_shutdown_actions(runner.cleanup())
         await super().start()
 
 
