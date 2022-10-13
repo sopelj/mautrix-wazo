@@ -69,3 +69,9 @@ class Puppet:
         return cls._from_row(
             await cls.db.fetchrow(f'SELECT {cls.columns} FROM "puppet" WHERE wazo_uuid=$1', uuid)
         )
+
+    @classmethod
+    async def get_by_custom_mxid(cls, uuid: WazoUUID) -> Puppet | None:
+        return cls._from_row(
+            await cls.db.fetchrow(f'SELECT {cls.columns} FROM "puppet" WHERE custom_mxid=$1', uuid)
+        )
