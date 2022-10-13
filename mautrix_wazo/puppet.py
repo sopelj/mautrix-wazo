@@ -31,8 +31,9 @@ class Puppet(DBPuppet, BasePuppet):
 
     by_uuid: dict[WazoUUID, Puppet] = {}
 
-    def __init__(self, wazo_id: WazoUUID):
-        self.default_mxid = self.get_mxid_from_id(wazo_id)
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.default_mxid = self.get_mxid_from_id(self.wazo_uuid)
         self.default_mxid_intent = self.az.intent.user(self.default_mxid)
         self.intent = self._fresh_intent()
 
@@ -120,7 +121,7 @@ class Puppet(DBPuppet, BasePuppet):
         await self.update()
 
     @classmethod
-    async def _create_puppet_by_uuid(cls, wazo_uuid):
+    async def _create_puppet_by_uuid(cls, wazo_uuid: WazoUUID):
         user_info = await cls._get_wazo_user_info(wazo_uuid)
         puppet = cls(
             wazo_uuid=wazo_uuid,
