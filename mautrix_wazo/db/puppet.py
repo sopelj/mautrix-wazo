@@ -47,5 +47,5 @@ class Puppet:
     @classmethod
     async def get_by_uuid(cls, uuid: WazoUUID) -> Puppet | None:
         return cls._from_row(
-            await cls.db.fetchrow(f'SELECT {cls.columns} FROM "user" WHERE wazo_uuid=$1', uuid)
+            await cls.db.fetchrow(f'SELECT {cls.columns} FROM "puppet" WHERE wazo_uuid=$1', uuid)
         )
