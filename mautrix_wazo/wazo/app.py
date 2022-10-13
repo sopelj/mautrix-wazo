@@ -69,6 +69,7 @@ async def receive_message(request: web.Request):
             ],
             created_at=data.created_at,
         ))
+        return web.Response(status=200)
 
 
 def init():
