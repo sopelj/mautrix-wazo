@@ -177,9 +177,9 @@ bridge:
     # chat portal rooms. This will be implicitly enabled if encryption.default is true.
     private_chat_portal_meta: false
     # Whether or not the bridge should send a read receipt from the bridge bot when a message has
-    # been sent to Signal. This let's you check manually whether the bridge is receiving your
+    # been sent to Wazo. This let's you check manually whether the bridge is receiving your
     # messages.
-    # Note that this is not related to Signal delivery receipts.
+    # Note that this is not related to Wazo delivery receipts.
     delivery_receipts: false
     # Whether or not delivery errors should be reported as messages in the Matrix room.
     delivery_error_reports: true
@@ -191,14 +191,14 @@ bridge:
     resend_bridge_info: false
     # Interval at which to resync contacts (in seconds).
     periodic_sync: 0
-    # Should leaving the room on Matrix make the user leave on Signal?
+    # Should leaving the room on Matrix make the user leave on Wazo?
     bridge_matrix_leave: true
 
     # Provisioning API part of the web server for automated portal creation and fetching information.
     # Used by things like mautrix-manager (https://github.com/tulir/mautrix-manager).
     provisioning:
         # Whether or not the provisioning API should be enabled.
-        enabled: true
+        enabled: false
         # The prefix to use in the provisioning API endpoints.
         prefix: /_matrix/provision
         # The shared secret to authorize users of the API.
@@ -211,13 +211,13 @@ bridge:
         segment_key: null
 
     # The prefix for commands. Only required in non-management rooms.
-    command_prefix: "!signal"
+    command_prefix: "!wazo"
 
     # Messages sent upon joining a management room.
     # Markdown is supported. The defaults are listed below.
     management_room_text:
         # Sent when joining a room.
-        welcome: "Hello, I'm a Signal bridge bot."
+        welcome: "Hello, I'm a Wazo bridge bot."
         # Sent when joining a management room and the user is already logged in.
         welcome_connected: "Use `help` for help."
         # Sent when joining a management room and the user is not logged in.
@@ -242,32 +242,7 @@ bridge:
         "example.com": "user"
         "@admin:example.com": "admin"
 
-    relay:
-        # Whether relay mode should be allowed. If allowed, `!signal set-relay` can be used to turn any
-        # authenticated user into a relaybot for that chat.
-        enabled: false
-        # The formats to use when sending messages to Signal via a relay user.
-        #
-        # Available variables:
-        #   $sender_displayname - The display name of the sender (e.g. Example User)
-        #   $sender_username    - The username (Matrix ID localpart) of the sender (e.g. exampleuser)
-        #   $sender_mxid        - The Matrix ID of the sender (e.g. @exampleuser:example.com)
-        #   $message            - The message content
-        message_formats:
-            m.text: '$sender_displayname: $message'
-            m.notice: '$sender_displayname: $message'
-            m.emote: '* $sender_displayname $message'
-            m.file: '$sender_displayname sent a file'
-            m.image: '$sender_displayname sent an image'
-            m.audio: '$sender_displayname sent an audio file'
-            m.video: '$sender_displayname sent a video'
-            m.location: '$sender_displayname sent a location'
-        # Specify a dedicated relay account. Must be a regular matrix account logged into this bridge
-        # and double puppeting working to auto-accept invites. When this user is invited to a room
-        # it will automatically be set as the relay user. May be overridden with `set-relay` or `unset-relay`
-        relaybot: '@relaybot:example.com'
-
-    # Format for generting URLs from location messages for sending to Signal
+    # Format for generting URLs from location messages for sending to Wazo
     # Google Maps: 'https://www.google.com/maps/place/{lat},{long}'
     # OpenStreepMap: 'https://www.openstreetmap.org/?mlat={lat}&mlon={long}'
     location_format: 'https://www.google.com/maps/place/{lat},{long}'
