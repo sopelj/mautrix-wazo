@@ -27,10 +27,9 @@ class Portal(DBPortal, BasePortal):
     def init_cls(cls, bridge):
         cls.config = bridge.config
         cls.matrix = bridge.matrix
-        cls.wazo = bridge.wazo
         cls.az = bridge.az
         cls.loop = bridge.loop
-        BasePortal.bridge = bridge
+        cls.bridge = bridge
         cls.private_chat_portal_meta = cls.config["bridge.private_chat_portal_meta"]
 
     def __int__(self, wazo_uuid: WazoUUID, mxid = None):

@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from .wazo import app as wazo_app
 from aiohttp.web import AppRunner, TCPSite
 from mautrix.bridge import Bridge, BaseUser, BasePortal, BasePuppet
 from mautrix.types import RoomID, UserID
@@ -10,7 +11,6 @@ from .matrix import MatrixHandler
 from .user import User
 from .portal import Portal
 from .puppet import Puppet
-from .wazo import app as wazo_app
 from . import __version__ as version
 
 

@@ -43,7 +43,8 @@ class WazoHookMessageData(pydantic.BaseModel):
     user_uuid: str
     proxied: bool
 
-def on_startup(app):
+
+async def on_startup(app):
     app["wazo_handler"] = WazoWebhookHandler(logger=app.logger.getChild("."+WazoWebhookHandler.__name__),
                                              bridge=app["bridge"])
 

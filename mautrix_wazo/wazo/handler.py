@@ -1,10 +1,14 @@
+from __future__ import annotations
 from logging import Logger
+from typing import TYPE_CHECKING
 
-from mautrix_wazo.__main__ import WazoBridge
-from mautrix_wazo.portal import Portal, PortalFailure
+from mautrix_wazo.portal import Portal
 from mautrix_wazo.puppet import Puppet
 from mautrix_wazo.types import WazoMessage
-from mautrix_wazo.user import User, UserError
+from mautrix_wazo.user import User
+
+if TYPE_CHECKING:
+    from mautrix_wazo.__main__ import WazoBridge
 
 """
 {
@@ -37,7 +41,7 @@ class WazoWebhookHandler:
 
     def __init__(self, logger: Logger, bridge):
         self.logger = logger
-        self.bridge
+        self.bridge = bridge
 
     async def handle_message(self, message: WazoMessage):
         # get portal representing room
