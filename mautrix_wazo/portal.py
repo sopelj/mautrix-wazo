@@ -143,6 +143,7 @@ class Portal(DBPortal, BasePortal):
         self.mxid = room_id
 
         self.by_mxid[room_id] = self
+        await self._postinit()
         if participants:
             assert source.mxid in participants
             for uid in participants:
