@@ -73,7 +73,7 @@ class Portal(DBPortal, BasePortal):
 
     @property
     def bridge_info_state_key(self) -> str:
-        return f'wazo_{self.mxid}'
+        return f'wazo_{self.wazo_uuid}'
 
     @property
     def bridge_info(self) -> dict[str, Any]:

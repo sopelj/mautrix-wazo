@@ -5,9 +5,10 @@ from typing import TYPE_CHECKING, cast
 
 from mautrix.bridge import BaseUser, BasePortal, BasePuppet
 from mautrix.types import UserID, RoomID
-from mautrix.util.bridge_state import BridgeState
+from mautrix.util.bridge_state import BridgeState, BridgeStateEvent
 
 from .db.user import User as DBUser
+from .portal import Portal
 from .puppet import Puppet
 from .types import WazoUUID
 
@@ -40,7 +41,7 @@ class User(DBUser, BaseUser):
         pass
 
     async def get_bridge_states(self) -> list[BridgeState]:
-        pass
+        return [BridgeState(state_event=BridgeStateEvent.CONNECTED)]
 
     def _add_to_cache(self):
         self.by_mxid[self.mxid] = self

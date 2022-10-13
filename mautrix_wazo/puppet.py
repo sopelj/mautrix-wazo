@@ -70,6 +70,11 @@ class Puppet(DBPuppet, BasePuppet):
         }
         cls.login_device_name = "Wazo Bridge"
 
+    @property
+    def mxid(self) -> UserID:
+        """The main Matrix user ID of this puppet."""
+        return self.custom_mxid or self.default_mxid
+
     @classmethod
     def get_id_from_mxid(cls, mxid: UserID) -> WazoUUID | None:
         identifier = cls.mxid_template.parse(mxid)
