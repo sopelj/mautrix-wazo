@@ -13,6 +13,9 @@ from .puppet import Puppet
 from .types import WazoMessage, WazoUUID
 from .user import User
 
+StateBridge = EventType.find("m.bridge", EventType.Class.STATE)
+StateHalfShotBridge = EventType.find("uk.half-shot.bridge", EventType.Class.STATE)
+
 
 class PortalFailure(Exception):
     pass
@@ -138,9 +141,26 @@ class Portal(DBPortal, BasePortal):
         assert self.wazo_uuid
 
         # actually create a new matrix room
-        await self._postinit()
+        initial_state = [
+            {
+                "type": str(StateBridge),
+                "state_key": self.bridge_info_state_key,
+                "content": self.bridge_info,
+            },
+            {
+                # TODO remove this once https://github.com/matrix-org/matrix-doc/pull/2346 is in spec
+                "type": str(StateHalfShotBridge),
+                "state_key": self.bridge_info_state_key,
+                "content": self.bridge_info,
+            },
+            {
+                "type": str(EventType.ROOM_POWER_LEVELS),
+                "content": power_levels.serialize(),
+            },
+        ]
+
         if not self.mxid:
-            room_id = await self.main_intent.create_room(name=name)
+            room_id = await self.main_intent.create_room(name=name, initial_state=initial_state)
             self.mxid = room_id
             self.by_mxid[room_id] = self
             await self.save()
@@ -148,8 +168,10 @@ class Portal(DBPortal, BasePortal):
         if participants:
             assert source.mxid in participants
             for uid in participants:
-                await self.main_intent.invite_user(self.mxid, uid)
+                extra_content = {
+                    "fi.mau.will_auto_accept": True
+                } if uid == source.mxid else {}
+                await self.main_intent.invite_user(self.mxid, uid, extra_content=extra_content)
         source_puppet = await Puppet.get_by_custom_mxid(source.mxid)
-        await self.main_intent.invite_user(self.mxid, source.mxid)
         await source_puppet.intent.join_room_by_id(self.mxid)
         return self.mxid

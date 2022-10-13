@@ -75,8 +75,6 @@ class WazoWebhookHandler:
                 # no registered matrix user in participants, this is a failure case
                 raise Exception("No registered matrix user in participants for message")
             else:
-                admin_puppet = await admin_user.get_puppet()
-                assert admin_puppet
                 # create a new matrix room with participants
                 room_id = await portal.create_matrix_room(source=admin_user, participants=[
                     p.mxid for p in puppets if p.mxid
