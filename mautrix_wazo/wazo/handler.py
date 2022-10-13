@@ -48,9 +48,6 @@ class WazoWebhookHandler:
         # TODO: logic for creating matrix room if missing?
 
         # get matrix side puppet for the sender
-        sender_puppet = await Puppet.get_by_uuid(message.sender_id, create=True)
-        if sender_puppet.mxid:
-            self.logger.info("Message sender: (wazo id %s, matrix id %s)", sender_puppet.wazo_uuid, sender_puppet.mxid)
 
         portal: Portal = await Portal.get_by_wazo_id(message.room_id, create=True)
 
@@ -68,6 +65,7 @@ class WazoWebhookHandler:
             await Puppet.get_by_uuid(p)
             for p in message.participants
         ]
+
         if not portal.mxid:
             try:
                 admin_user = next(p for p in mapped_participants if p)
@@ -84,6 +82,16 @@ class WazoWebhookHandler:
                 room_id = await portal.create_matrix_room(source=admin_user, participants=participants_mxids,
                                                           name=":".join(pup.first_name for pup in puppets))
                 self.logger.info("Created corresponding matrix room(%s)", room_id)
+
+        try:
+            sender_matrix_user = next(u for u in mapped_participants if u.wazo_uuid == message.sender_id and u.mxid)
+        except StopIteration:
+            sender_puppet = await Puppet.get_by_uuid(message.sender_id, create=True)
+        else:
+            sender_puppet = await Puppet.get_by_custom_mxid(sender_matrix_user.mxid)
+
+        assert sender_puppet.mxid
+        self.logger.info("Message sender: (wazo id %s, matrix id %s)", sender_puppet.wazo_uuid, sender_puppet.mxid)
 
         event_id = await portal.handle_wazo_message(puppet=sender_puppet, message=message)
         self.logger.info("Dispatched wazo message to matrix (event id %s)", event_id)

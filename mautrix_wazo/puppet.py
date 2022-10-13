@@ -98,7 +98,7 @@ class Puppet(DBPuppet, BasePuppet):
         if puppet:
             cls.by_uuid[wazo_uuid] = puppet
             return puppet
-        if create is True:
+        if create:
             return await cls._create_puppet_by_uuid(wazo_uuid)
         return None
 
