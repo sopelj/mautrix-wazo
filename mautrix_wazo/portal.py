@@ -1,8 +1,8 @@
 from __future__ import annotations
 
-from typing import Any, List
+from typing import Any
 
-from mautrix import bridge as br
+from aiohttp import ClientSession
 from mautrix.appservice import IntentAPI
 from mautrix.bridge import BasePortal, BasePuppet
 from mautrix.types import MessageEventContent, EventID, TextMessageEventContent, MessageType, EventType
@@ -32,7 +32,7 @@ class Portal(DBPortal, BasePortal):
         cls.bridge = bridge
         cls.private_chat_portal_meta = cls.config["bridge.private_chat_portal_meta"]
 
-    def __int__(self, wazo_uuid: WazoUUID, mxid = None):
+    def __int__(self, wazo_uuid: WazoUUID, mxid=None):
         DBPortal.__init__(self, wazo_uuid=wazo_uuid, mxid=mxid)
         BasePortal.__init__(self)
 
@@ -42,22 +42,51 @@ class Portal(DBPortal, BasePortal):
     @property
     def main_intent(self) -> IntentAPI:
         if not self._main_intent:
-            raise ValueError("Portal must be postinit()ed before main_intent can be used")
+            raise ValueError("Portal must be postinit() ed before main_intent can be used")
         return self._main_intent
 
     async def get_dm_puppet(self) -> BasePuppet | None:
-        pass
+        return None
 
-    async def handle_matrix_message(self, sender: br.BaseUser, message: MessageEventContent, event_id: EventID) -> None:
-        pass
+    async def handle_matrix_message(self, sender: User, message: MessageEventContent, event_id: EventID) -> None:
+        try:
+            await self._handle_matrix_message(sender, message, event_id)
+        except Exception as e:
+            self.log.exception(f"Failed to handle Matrix event {event_id}: {e}")
+
+    async def _handle_matrix_message(self, sender, message, event_id):
+        if message.get_edit():
+            raise NotImplementedError("Edits are not supported by the Wazo bridge.")
+        if message.msgtype == MessageType.TEXT or message.msgtype == MessageType.NOTICE:
+            base_url = self.bridge.config['wazo.api_url']
+            headers = {'X-Auth-Token': self.bridge.config['wazo.api_token']}
+            async with ClientSession() as session:
+                url = f'/users/{sender.wazo_uuid}/rooms/{self.wazo_uuid}/messages'
+                await session.post(url, headers=headers, json={'alias': '', 'content': message.body})
+        else:
+            self.log.exception(f"Failed to handle Matrix event {event_id}")
+            raise NotImplementedError('No time')
 
     @property
     def bridge_info_state_key(self) -> str:
-        pass
+        return f'wazo_{self.mxid}'
 
     @property
     def bridge_info(self) -> dict[str, Any]:
-        pass
+        return {
+            "bridgebot": self.az.bot_mxid,
+            "creator": self.main_intent.mxid,
+            "protocol": {
+                "id": "wazo",
+                "displayname": "Wazo",
+                "avatar_url": self.config["appservice.bot_avatar"],
+            },
+            "channel": {
+                "id": str(self.wazo_uuid),
+                "displayname": self.name,
+                "avatar_url": self.config["appservice.bot_avatar"],
+            },
+        }
 
     async def _postinit(self):
         if self.mxid:
@@ -79,11 +108,11 @@ class Portal(DBPortal, BasePortal):
         portal = await super(Portal, cls).get_by_wazo_id(room_id)
         if portal:
             return portal
-        elif create:
+        if create:
             portal = cls(wazo_uuid=room_id)
             await portal._postinit()
-            # save in database
             await portal.insert()
+            cls.by_wzid[room_id] = portal
             return portal
         else:
             raise Exception
@@ -104,7 +133,7 @@ class Portal(DBPortal, BasePortal):
         self.log.info("message dispatched to matrix (event_id=%s)", event_id)
         return event_id
 
-    async def create_matrix_room(self, source: Puppet, participants: List[User]=None):
+    async def create_matrix_room(self, source: Puppet, participants: list[User] = None):
         assert self.wazo_uuid
         if self.mxid:
             # room already exists
