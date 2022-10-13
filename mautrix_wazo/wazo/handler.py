@@ -49,19 +49,17 @@ class WazoWebhookHandler:
 
         # get matrix side puppet for the sender
         sender_puppet = await Puppet.get_by_uuid(message.sender_id, create=True)
-
-        # get user mapping for the sender
-        #sender: User = await User.get_by_uuid(message.sender_id)
+        if sender_puppet.mxid:
+            self.logger.info("Message sender: (wazo id %s, matrix id %s)", sender_puppet.wazo_uuid, sender_puppet.mxid)
 
         portal: Portal = await Portal.get_by_wazo_id(message.room_id, create=True)
-
-        matrix_room_id = await portal.create_matrix_room(source=sender_puppet)
 
         mapped_participants = [
             await User.get_by_uuid(p)
             for p in message.participants
         ]
         if not any(mapped_participants):
+            self.logger.info("No participant in room has an associated matrix id. Ignoring.")
             # if no participant has a matrix user, we can ignore
             return
 
@@ -70,8 +68,6 @@ class WazoWebhookHandler:
             await Puppet.get_by_uuid(p)
             for p in message.participants
         ]
-
-        self.logger.info("Obtained corresponding matrix room(%s)", matrix_room_id)
         if not portal.mxid:
             try:
                 admin = next(p for p in puppets if p.mxid)
@@ -79,9 +75,11 @@ class WazoWebhookHandler:
                 # no registered matrix user in participants, this is a failure case
                 raise Exception("No registered matrix user in participants for message")
             else:
-                # create a new matrix room
-                await portal.create_matrix_room(source=admin)
-                # TODO: invite matrix users/bot/relay sender(s)?
+                # create a new matrix room with participants
+                room_id = await portal.create_matrix_room(source=admin, participants=[
+                    p.mxid for p in puppets
+                ])
+                self.logger.info("Created corresponding matrix room(%s)", room_id)
 
         event_id = await portal.handle_wazo_message(puppet=sender_puppet, message=message)
         self.logger.info("Dispatched wazo message to matrix (event id %s)", event_id)

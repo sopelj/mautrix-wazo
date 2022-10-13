@@ -5,7 +5,7 @@ from typing import Any
 from aiohttp import ClientSession
 from mautrix.appservice import IntentAPI
 from mautrix.bridge import BasePortal, BasePuppet
-from mautrix.types import MessageEventContent, EventID, TextMessageEventContent, MessageType, EventType
+from mautrix.types import MessageEventContent, EventID, TextMessageEventContent, MessageType, EventType, UserID
 
 from .config import Config
 from .db.portal import Portal as DBPortal
@@ -133,17 +133,16 @@ class Portal(DBPortal, BasePortal):
         self.log.info("message dispatched to matrix (event_id=%s)", event_id)
         return event_id
 
-    async def create_matrix_room(self, source: Puppet, participants: list[User] = None):
+    async def create_matrix_room(self, source: Puppet, participants: list[UserID]=None):
         assert self.wazo_uuid
         if self.mxid:
             # room already exists
             return self.mxid
+
         intent = source.intent
 
         # actually create a new matrix room
-        room_id = await intent.create_room(invitees=participants and [
-            p.mxid for p in participants
-        ])
+        room_id = await intent.create_room(invitees=participants)
         self.mxid = room_id
 
         self.by_mxid[room_id] = self

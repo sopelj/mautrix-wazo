@@ -31,6 +31,11 @@ class Puppet(DBPuppet, BasePuppet):
 
     by_uuid: dict[WazoUUID, Puppet] = {}
 
+    def __init__(self, wazo_id: WazoUUID):
+        self.default_mxid = self.get_mxid_from_id(wazo_id)
+        self.default_mxid_intent = self.az.intent.user(self.default_mxid)
+        self.intent = self._fresh_intent()
+
     @classmethod
     def init_cls(cls, bridge: "SignalBridge") -> None:
         cls.config = bridge.config
