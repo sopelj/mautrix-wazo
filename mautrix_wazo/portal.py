@@ -138,12 +138,12 @@ class Portal(DBPortal, BasePortal):
         assert self.wazo_uuid
 
         # actually create a new matrix room
+        await self._postinit()
         room_id = await self.main_intent.create_room()
 
         self.mxid = room_id
 
         self.by_mxid[room_id] = self
-        await self._postinit()
         if participants:
             assert source.mxid in participants
             for uid in participants:
