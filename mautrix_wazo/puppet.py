@@ -42,6 +42,7 @@ class Puppet(DBPuppet, BasePuppet):
         cls.loop = bridge.loop
         cls.mx = bridge.matrix
         cls.az = bridge.az
+        cls.bridge = bridge
         cls.hs_domain = cls.config["homeserver.domain"]
         cls.mxid_template = SimpleTemplate(
             cls.config["bridge.username_template"],
