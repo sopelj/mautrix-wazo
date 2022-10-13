@@ -78,8 +78,8 @@ class WazoWebhookHandler:
                 admin_puppet = await admin_user.get_puppet()
                 assert admin_puppet
                 # create a new matrix room with participants
-                room_id = await portal.create_matrix_room(source=admin_puppet, participants=[
-                    p.mxid for p in puppets
+                room_id = await portal.create_matrix_room(source=admin_user, participants=[
+                    p.mxid for p in puppets if p.mxid
                 ])
                 self.logger.info("Created corresponding matrix room(%s)", room_id)
 
