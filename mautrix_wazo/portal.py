@@ -33,8 +33,8 @@ class Portal(DBPortal, BasePortal):
         cls.bridge = bridge
         cls.private_chat_portal_meta = cls.config["bridge.private_chat_portal_meta"]
 
-    def __int__(self, wazo_uuid: WazoUUID, mxid=None):
-        DBPortal.__init__(self, wazo_uuid=wazo_uuid, mxid=mxid)
+    def __int__(self, **kwargs):
+        DBPortal.__init__(self, **kwargs)
         BasePortal.__init__(self)
 
     async def save(self) -> None:
@@ -134,17 +134,20 @@ class Portal(DBPortal, BasePortal):
         self.log.info("message dispatched to matrix (event_id=%s)", event_id)
         return event_id
 
-    async def create_matrix_room(self, source: Puppet, participants: list[UserID]=None):
+    async def create_matrix_room(self, source: User, participants: list[UserID]=None):
         assert self.wazo_uuid
 
-        intent = source.intent
         # actually create a new matrix room
-        room_id = await intent.create_room()
+        room_id = await self.main_intent.create_room()
 
         self.mxid = room_id
 
         self.by_mxid[room_id] = self
         if participants:
+            assert source.mxid in participants
             for uid in participants:
-                await intent.invite_user(room_id, uid)
+                await self.main_intent.invite_user(room_id, uid)
+        source_puppet = await Puppet.get_by_custom_mxid(source.mxid)
+        await source_puppet.intent.join_room_by_id(self.mxid)
+
         return room_id
