@@ -87,7 +87,7 @@ class Portal(DBPortal, BasePortal):
             },
             "channel": {
                 "id": str(self.wazo_uuid),
-                "displayname": self.name,
+                "displayname": str(self.wazo_uuid),
                 "avatar_url": self.config["appservice.bot_avatar"],
             },
         }
