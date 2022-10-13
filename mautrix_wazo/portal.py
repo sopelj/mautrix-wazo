@@ -135,16 +135,15 @@ class Portal(DBPortal, BasePortal):
 
     async def create_matrix_room(self, source: Puppet, participants: list[UserID]=None):
         assert self.wazo_uuid
-        if self.mxid:
-            # room already exists
-            return self.mxid
 
         intent = source.intent
-
         # actually create a new matrix room
-        room_id = await intent.create_room(invitees=participants)
+        room_id = await intent.create_room()
+
         self.mxid = room_id
 
         self.by_mxid[room_id] = self
+        if participants:
+            for uid in participants:
+                await intent.invite_user(room_id, uid)
         return room_id
-
