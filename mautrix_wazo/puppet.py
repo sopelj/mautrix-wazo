@@ -34,13 +34,18 @@ class Puppet(DBPuppet, BasePuppet):
     by_custom_mxid: dict[UserID, Puppet] = {}
 
     def __init__(self, *args, **kwargs):
+        kwargs.setdefault('is_registered', False)
+        kwargs.setdefault('custom_mxid', None)
+        kwargs.setdefault('access_token', None)
+        kwargs.setdefault('next_batch', None)
+        kwargs.setdefault('base_url', None)
         super().__init__(*args, **kwargs)
         self.default_mxid = self.get_mxid_from_id(self.wazo_uuid)
         self.default_mxid_intent = self.az.intent.user(self.default_mxid)
         self.intent = self._fresh_intent()
 
     @classmethod
-    def init_cls(cls, bridge: "SignalBridge") -> None:
+    def init_cls(cls, bridge: "WazoBridge") -> None:
         cls.config = bridge.config
         cls.loop = bridge.loop
         cls.mx = bridge.matrix
@@ -149,8 +154,6 @@ class Puppet(DBPuppet, BasePuppet):
             first_name=user_info['firstname'],
             last_name=user_info['lastname'],
             username=user_info['username'] or user_info['email'],
-            is_registered=False,
-            custom_mxid='',
         )
         await puppet.insert()
         puppet._add_to_cache()
