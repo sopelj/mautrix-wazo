@@ -9,6 +9,9 @@ from mautrix.types import RoomID, UserID
 from .db import init as init_db, upgrade_table
 from .config import Config
 from .matrix import MatrixHandler
+from .user import User
+from .portal import Portal
+from .puppet import Puppet
 from .wazo import app as wazo_app
 from . import __version__ as version
 
@@ -56,6 +59,10 @@ class WazoBridge(Bridge):
         pass
 
     async def start(self) -> None:
+        User.init_cls(self)
+        Puppet.init_cls(self)
+        Portal.init_cls(self)
+
         async def wazo_http_startup():
             self.log.info("Starting wazo webhook server")
             await self.wazo_runner.setup()

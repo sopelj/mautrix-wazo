@@ -13,18 +13,25 @@ from mautrix_wazo.types import WazoUUID
 class Puppet:
     db: ClassVar[Database]
 
-    pk: int
     wazo_uuid: WazoUUID
     first_name: str
     last_name: str
     username: str
 
-    columns = 'pk, wazo_uuid, first_name, last_name, username'
+    columns = 'wazo_uuid, first_name, last_name, username'
 
     async def insert(self) -> None:
         await self.db.execute(
-            f"INSERT INTO puppet ({self.columns}) VALUES ($1, $2, $3, $4, $5)",
-            self.pk,
+            f"INSERT INTO puppet ({self.columns}) VALUES ($1, $2, $3, $4)",
+            self.wazo_uuid,
+            self.first_name,
+            self.last_name,
+            self.username,
+        )
+
+    async def update(self):
+        await self.db.execute(
+            "UPDATE puppet SET first_name=$2, last_name=$3, username=$4 WHERE wazo_uuid=$1",
             self.wazo_uuid,
             self.first_name,
             self.last_name,
@@ -42,4 +49,3 @@ class Puppet:
         return cls._from_row(
             await cls.db.fetchrow(f'SELECT {cls.columns} FROM "user" WHERE wazo_uuid=$1', uuid)
         )
-

@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import Any
+from typing import Any, TYPE_CHECKING
 
 from mautrix import bridge as br
 from mautrix.bridge import BasePortal, BasePuppet
@@ -9,6 +9,9 @@ from mautrix.types import MessageEventContent, EventID
 from .db.portal import Portal as DBPortal
 from .types import WazoMessage, WazoUUID
 from .user import User
+
+if TYPE_CHECKING:
+    from .__main__ import WazoBridge
 
 
 class Store:
@@ -27,6 +30,13 @@ class PortalFailure(Exception):
 
 
 class Portal(DBPortal, BasePortal):
+    @classmethod
+    def init_cls(cls, bridge: "WazoBridge") -> None:
+        cls.bridge = bridge
+        cls.config = bridge.config
+        cls.az = bridge.az
+        cls.loop = bridge.loop
+
     async def save(self) -> None:
         pass
 

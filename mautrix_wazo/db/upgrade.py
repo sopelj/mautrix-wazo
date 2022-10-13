@@ -20,8 +20,7 @@ async def upgrade_latest(conn: Connection) -> None:
     )
     await conn.execute(
         """CREATE TABLE puppet (
-            pk            BIGINT PRIMARY KEY,
-            wazo_uuid     TEXT,
+            wazo_uuid     TEXT PRIMARY KEY,
             first_name    TEXT,
             last_name    TEXT,
             username      TEXT
