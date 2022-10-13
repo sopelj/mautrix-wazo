@@ -63,6 +63,14 @@ class Puppet(DBPuppet, BasePuppet):
         }
         cls.login_device_name = "Wazo Bridge"
 
+    @property
+    def custom_mxid(self):
+        return False
+
+    @property
+    def is_registered(self):
+        return self.wazo_uuid and self.mxid
+
     @classmethod
     def get_id_from_mxid(cls, mxid: UserID) -> WazoUUID | None:
         identifier = cls.mxid_template.parse(mxid)
