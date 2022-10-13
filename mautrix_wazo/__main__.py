@@ -1,7 +1,5 @@
 from __future__ import annotations
 
-import os
-
 from aiohttp.web import AppRunner, TCPSite
 from mautrix.bridge import Bridge, BaseUser, BasePortal, BasePuppet
 from mautrix.types import RoomID, UserID
@@ -16,6 +14,10 @@ from .wazo import app as wazo_app
 from . import __version__ as version
 
 
+class WazoHandler:
+    pass
+
+
 class WazoBridge(Bridge):
     name = "mautrix-wazo"
     module = "mautrix_wazo"
@@ -28,16 +30,22 @@ class WazoBridge(Bridge):
     matrix_class = MatrixHandler
     upgrade_table = upgrade_table
 
+    wazo_class = WazoHandler
+
     wazo_runner: AppRunner
     config: Config
     matrix: MatrixHandler
+    wazo: WazoHandler
 
     def prepare_db(self) -> None:
         super().prepare_db()
         init_db(self.db)
 
     def prepare_bridge(self) -> None:
-        self.wazo_runner = AppRunner(wazo_app.app)
+        # inject bridge into application server
+        app = wazo_app.init()
+        app["bridge"] = self
+        self.wazo_runner = AppRunner(app)
         super().prepare_bridge()
 
     async def get_user(self, user_id: UserID, create: bool = True) -> BaseUser | None:

@@ -14,11 +14,17 @@ from mautrix_wazo.types import WazoUUID
 class Portal:
     db: ClassVar[Database]
 
-    mxid: RoomID | None
     wazo_uuid: WazoUUID
+    mxid: RoomID | None = None
 
     async def insert(self) -> None:
         await self.db.execute('INSERT INTO portal (mxid, wazo_uuid) VALUES ($1, $2)', self.mxid, self.wazo_uuid)
 
     async def delete(self) -> None:
         await self.db.execute('DELETE FROM portal WHERE mxid = $1', self.mxid)
+
+    @classmethod
+    async def get_by_wazo_id(cls, wazo_id: WazoUUID):
+        row = await cls.db.fetchrow("SELECT * FROM portal where wazo_uuid = $1", wazo_id)
+        if row:
+            return cls(mxid=row["mxid"], wazo_uuid=row["wazo_uuid"])

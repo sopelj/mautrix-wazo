@@ -1,4 +1,8 @@
+from logging import Logger
+
+from mautrix_wazo.__main__ import WazoBridge
 from mautrix_wazo.portal import Portal, PortalFailure
+from mautrix_wazo.puppet import Puppet
 from mautrix_wazo.types import WazoMessage
 from mautrix_wazo.user import User, UserError
 
@@ -28,24 +32,58 @@ class WazoWebhookHandler:
     """
     Handle webhook for events dispatched by wazo
     """
+    logger: Logger
+    bridge: WazoBridge
+
+    def __init__(self, logger: Logger, bridge):
+        self.logger = logger
+        self.bridge
 
     async def handle_message(self, message: WazoMessage):
         # get portal representing room
         # TODO: logic for creating matrix room if missing?
-        try:
-            portal: Portal = await Portal.get_by_wazo_id(message.room_id, create=True)
-        except PortalFailure:
-            raise
 
-        # TODO: logic for creating matrix user if missing?
-        try:
-            sender: User = await User.get_by_wazo_id(message.sender_id, create=True)
-        except UserError:
-            raise
+        # get matrix side puppet for the sender
+        sender_puppet = await Puppet.get_by_uuid(message.sender_id, create=True)
 
-        await portal.handle_wazo_message(sender, message)
+        # get user mapping for the sender
+        #sender: User = await User.get_by_uuid(message.sender_id)
+
+        portal: Portal = await Portal.get_by_wazo_id(message.room_id, create=True)
+
+        matrix_room_id = await portal.create_matrix_room(source=sender_puppet)
+
+        mapped_participants = [
+            await User.get_by_uuid(p)
+            for p in message.participants
+        ]
+        if not any(mapped_participants):
+            # if no participant has a matrix user, we can ignore
+            return
+
+        # setup
+        puppets = [
+            await Puppet.get_by_uuid(p)
+            for p in message.participants
+        ]
+
+        self.logger.info("Obtained corresponding matrix room(%s)", matrix_room_id)
+        if not portal.mxid:
+            try:
+                admin = next(p for p in puppets if p.mxid)
+            except StopIteration:
+                # no registered matrix user in participants, this is a failure case
+                raise Exception("No registered matrix user in participants for message")
+            else:
+                # create a new matrix room
+                await portal.create_matrix_room(source=admin)
+                # TODO: invite matrix users/bot/relay sender(s)?
+
+        event_id = await portal.handle_wazo_message(puppet=sender_puppet, message=message)
+        self.logger.info("Dispatched wazo message to matrix (event id %s)", event_id)
+
         # wazo message should have been dispatched to matrix
-        # TODO: anything else
+        # TODO: anything else?
 
 
 
