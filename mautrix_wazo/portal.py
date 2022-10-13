@@ -111,6 +111,7 @@ class Portal(DBPortal, BasePortal):
         # try and get from database
         portal = await super(Portal, cls).get_by_wazo_id(room_id)
         if portal:
+            await portal._postinit()
             return portal
         if create:
             portal = cls(wazo_uuid=room_id)
@@ -139,7 +140,7 @@ class Portal(DBPortal, BasePortal):
 
     async def create_matrix_room(self, source: User, participants: list[UserID] = None, name=None):
         assert self.wazo_uuid
-        await self._postinit()
+        #await self._postinit()
 
         # actually create a new matrix room
         initial_state = [
