@@ -1,14 +1,15 @@
 from __future__ import annotations
 
-from typing import AsyncIterable, Awaitable, TYPE_CHECKING
+import contextlib
+from typing import AsyncIterable, Awaitable, TYPE_CHECKING, cast
 
 from mautrix import bridge as br
 from mautrix.bridge import BaseUser, BasePortal, BasePuppet
 from mautrix.types import UserID, RoomID
 from mautrix.util.bridge_state import BridgeState
-from aiohttp import ClientSession
 
 from .db.user import User as DBUser
+from .puppet import Puppet
 from .types import WazoUUID
 
 if TYPE_CHECKING:
@@ -20,6 +21,9 @@ class UserError(Exception):
 
 
 class User(DBUser, BaseUser):
+    by_mxid: dict[UserID, User] = {}
+    by_uuid: dict[WazoUUID, User] = {}
+
     @classmethod
     def init_cls(cls, bridge: "WazoBridge") -> None:
         cls.bridge = bridge
@@ -42,26 +46,27 @@ class User(DBUser, BaseUser):
     async def get_bridge_states(self) -> list[BridgeState]:
         pass
 
-    @classmethod
-    async def get_wazo_user_info(cls, uuid: WazoUUID):
-        base_url = cls.bridge.config['wazo.api_url']
-        headers = {'X-Auth-Token': cls.bridge.config['wazo.api_token']}
-
-        async with ClientSession() as session:
-            async with session.get(f'{base_url}/confd/1.1/api/users/{uuid}', headers=headers) as response:
-                return await response.json()
+    def _add_to_cache(self):
+        self.by_mxid[self.mxid] = self
+        self.by_uuid[self.wazo_uuid] = self
 
     @classmethod
-    async def get_by_wazo_id(cls, wazo_user_uuid: WazoUUID, create=True) -> User:
-        user = await cls.get_by_uuid(wazo_user_uuid)
+    async def get_by_mxid(cls, mxid: UserID, create: bool = True) -> User | None:
+        uuid = Puppet.get_id_from_mxid(mxid)
+        if not uuid:
+            return None
+        with contextlib.suppress(KeyError):
+            return cls.by_mxid[mxid]
+
+        user = cast(cls, await super().get_by_mxid(mxid))
         if user is not None:
+            user._add_to_cache()
             return user
-        if create:
-            user_info = await cls.get_wazo_user_info(wazo_user_uuid)
-            cls.bridge.log.info(f'User info: {wazo_user_uuid}:', user_info)
-            user = cls(
-                wazo_uuid=wazo_user_uuid,
-            )
-        else:
-            raise UserError
 
+        if create:
+            user = cls(mxid=mxid, wazo_uuid=uuid)
+            await user.insert()
+            user._add_to_cache()
+            return user
+
+        return

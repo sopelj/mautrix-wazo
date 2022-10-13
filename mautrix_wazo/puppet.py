@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+import contextlib
+from typing import cast
 from uuid import UUID
 
 from mautrix.bridge import BasePuppet
@@ -7,6 +9,7 @@ from mautrix.types import UserID
 from mautrix.appservice import IntentAPI
 from mautrix.util.simple_template import SimpleTemplate
 from yarl import URL
+from aiohttp import ClientSession
 
 from .config import Config
 from .db.puppet import Puppet as DBPuppet
@@ -14,8 +17,6 @@ from .types import WazoUUID
 
 
 class Puppet(DBPuppet, BasePuppet):
-    by_pk: dict[int, Puppet] = {}
-    by_custom_mxid: dict[UserID, Puppet] = {}
     hs_domain: str
     mxid_template: SimpleTemplate[str]
 
@@ -23,6 +24,8 @@ class Puppet(DBPuppet, BasePuppet):
 
     default_mxid_intent: IntentAPI
     default_mxid: UserID
+
+    by_uuid: dict[WazoUUID, Puppet] = {}
 
     @classmethod
     def init_cls(cls, bridge: "SignalBridge") -> None:
@@ -73,6 +76,39 @@ class Puppet(DBPuppet, BasePuppet):
     @classmethod
     async def get_by_custom_mxid(cls, mxid: UserID) -> BasePuppet:
         pass
+
+    @classmethod
+    async def _get_wazo_user_info(cls, uuid: WazoUUID) -> dict[str, str]:
+        base_url = cls.bridge.config['wazo.api_url']
+        headers = {'X-Auth-Token': cls.bridge.config['wazo.api_token']}
+
+        async with ClientSession() as session:
+            async with session.get(f'{base_url}/confd/1.1/api/users/{uuid}', headers=headers) as response:
+                return await response.json()
+
+    @classmethod
+    async def get_by_uuid(cls, uuid: WazoUUID, create=True) -> Puppet | None:
+        with contextlib.suppress(KeyError):
+            return cls.by_uuid[uuid]
+
+        puppet = cast(cls, await super().get_by_uuid(uuid))
+        if puppet is not None:
+            puppet.by_uuid[uuid] = puppet
+            return puppet
+
+        if create:
+            user_info = await cls._get_wazo_user_info(uuid)
+            puppet = cls(
+                wazo_uuid=uuid,
+                first_name=user_info['firstname'],
+                last_name=user_info['lastname'],
+                username=user_info['username'] or user_info['email'],
+            )
+            await puppet.insert()
+            puppet.by_uuid[uuid] = puppet
+            return puppet
+
+        return None
 
     async def save(self) -> None:
         await self.update()
