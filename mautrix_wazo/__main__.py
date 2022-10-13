@@ -7,7 +7,7 @@ from . import __version__ as version
 from .db import init as init_db, upgrade_table
 from .config import Config
 from .matrix import MatrixHandler
-
+from .wazo import app as wazo_app
 
 class WazoBridge(Bridge):
     name = "mautrix-wazo"
@@ -45,6 +45,10 @@ class WazoBridge(Bridge):
 
     async def count_logged_in_users(self) -> int:
         pass
+
+    async def start(self) -> None:
+        self.add_startup_actions(wazo_app.serve())
+        await super().start()
 
 
 WazoBridge().run()
