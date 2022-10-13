@@ -13,6 +13,10 @@ app = fastapi.FastAPI(
 )
 
 
+class WazoRoomData(pydantic.BaseModel):
+    uuid: str
+
+
 class WazoHookMessageData(pydantic.BaseModel):
     """
     {
@@ -34,12 +38,12 @@ class WazoHookMessageData(pydantic.BaseModel):
         ]
     }
     """
-    event_id: str
+    uuid: str
     content: str
     participants: List[str]
-    room_id: str = pydantic.Field(alias="room.uuid")
+    room: WazoRoomData
     created_at: datetime.datetime
-    user_id: str
+    user_uuid: str
 
 
 def wazo_handler_provider() -> WazoWebhookHandler:
@@ -53,10 +57,12 @@ def wazo_handler_provider() -> WazoWebhookHandler:
 
 @app.post("/messages")
 async def receive_message(data: WazoHookMessageData, handler: WazoWebhookHandler = fastapi.Depends(wazo_handler_provider)):
+    print("data=", data)
+    # data = WazoHookMessageData.parse_obj(body)
     await handler.handle_message(WazoMessage(
-        event_id=WazoUUID(data.event_id),
-        sender_id=WazoUUID(data.user_id),
-        room_id=WazoUUID(data.room_id),
+        event_id=WazoUUID(data.uuid),
+        sender_id=WazoUUID(data.user_uuid),
+        room_id=WazoUUID(data.room.uuid),
         content=data.content,
         participants=[
             WazoUUID(p)

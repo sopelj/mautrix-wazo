@@ -33,20 +33,19 @@ class WazoWebhookHandler:
         # get portal representing room
         # TODO: logic for creating matrix room if missing?
         try:
-            portal: Portal = await Portal.get_by_wazo_room_id(message.room_id, create=True)
+            portal: Portal = await Portal.get_by_wazo_id(message.room_id, create=True)
         except PortalFailure:
             raise
-
-        portal.create_matrix_room(wazo_room_id=message.room_id, participants=message.participants)
 
         # TODO: logic for creating matrix user if missing?
         try:
             sender: User = await User.get_by_wazo_id(message.sender_id, create=True)
         except UserError:
             raise
+
         await portal.handle_wazo_message(sender, message)
         # wazo message should have been dispatched to matrix
-        # TODO: anything else?
+        # TODO: anything else
 
 
 
