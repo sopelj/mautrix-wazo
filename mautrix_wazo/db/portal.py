@@ -31,7 +31,7 @@ class Portal:
 
     async def update(self):
         await self.db.execute(
-            "UPDATE portal SET wazo_uuid=$2, mxid=$1 WHERE wazo_uuid=$1",
-            self.mxid,
+            "UPDATE portal SET wazo_uuid=$1, mxid=$2 WHERE wazo_uuid=$1",
             self.wazo_uuid,
+            self.mxid,
         )
