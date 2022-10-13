@@ -139,7 +139,7 @@ class Portal(DBPortal, BasePortal):
 
         # actually create a new matrix room
         await self._postinit()
-        if self.mxid:
+        if not self.mxid:
             room_id = await self.main_intent.create_room(name=name)
             self.mxid = room_id
             self.by_mxid[room_id] = self
