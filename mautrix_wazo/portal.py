@@ -22,6 +22,7 @@ class Portal(DBPortal, BasePortal):
     by_mxid = {}
     by_wzid = {}
     config: Config
+    encrypted = False
 
     @classmethod
     def init_cls(cls, bridge):
