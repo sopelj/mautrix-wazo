@@ -175,7 +175,6 @@ class Portal(DBPortal, BasePortal):
                 extra_content = {
                     "fi.mau.will_auto_accept": True
                 } if uid == source.mxid else {}
-                try:
                 await self.main_intent.invite_user(self.mxid, uid, extra_content=extra_content)
 
         return self.mxid
