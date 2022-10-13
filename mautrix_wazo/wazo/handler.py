@@ -70,13 +70,15 @@ class WazoWebhookHandler:
         ]
         if not portal.mxid:
             try:
-                admin = next(p for p in puppets if p.mxid)
+                admin_user = next(p for p in mapped_participants if p)
             except StopIteration:
                 # no registered matrix user in participants, this is a failure case
                 raise Exception("No registered matrix user in participants for message")
             else:
+                admin_puppet = await admin_user.get_puppet()
+                assert admin_puppet
                 # create a new matrix room with participants
-                room_id = await portal.create_matrix_room(source=admin, participants=[
+                room_id = await portal.create_matrix_room(source=admin_puppet, participants=[
                     p.mxid for p in puppets
                 ])
                 self.logger.info("Created corresponding matrix room(%s)", room_id)

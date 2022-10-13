@@ -4,6 +4,7 @@ import contextlib
 from typing import cast, TYPE_CHECKING
 from uuid import UUID
 
+import aiohttp.client_exceptions
 from mautrix.bridge import BasePuppet
 from mautrix.types import UserID
 from mautrix.appservice import IntentAPI
@@ -99,9 +100,13 @@ class Puppet(DBPuppet, BasePuppet):
         base_url = cls.bridge.config['wazo.api_url']
         headers = {'X-Auth-Token': cls.bridge.config['wazo.api_token']}
 
-        async with ClientSession() as session:
-            async with session.get(f'{base_url}/confd/1.1/users/{uuid}', headers=headers) as response:
-                return await response.json()
+        try:
+            async with ClientSession() as session:
+                async with session.get(f'{base_url}/confd/1.1/users/{uuid}', headers=headers) as response:
+                    return await response.json()
+        except aiohttp.client_exceptions.ClientResponseError as ex:
+            cls.log.exception("Could not get wazo user info: %s", ex.message)
+            raise
 
     @classmethod
     async def get_by_uuid(cls, uuid: WazoUUID, create=True) -> Puppet | None:
