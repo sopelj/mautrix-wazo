@@ -48,23 +48,23 @@ class WazoBridge(Bridge):
         self.wazo_runner = AppRunner(app)
         super().prepare_bridge()
 
-    async def get_user(self, user_id: UserID, create: bool = True) -> BaseUser | None:
-        pass
+    async def get_user(self, user_id: UserID, create: bool = True) -> User:
+        return await User.get_by_mxid(user_id, create=create)
 
-    async def get_portal(self, room_id: RoomID) -> BasePortal | None:
-        pass
+    async def get_portal(self, room_id: RoomID) -> Portal:
+        return await Portal.get_by_mxid(room_id)
 
-    async def get_puppet(self, user_id: UserID, create: bool = False) -> BasePuppet | None:
-        pass
+    async def get_puppet(self, user_id: UserID, create: bool = False) -> Puppet:
+        return await Puppet.get_by_mxid(user_id, create=create)
 
-    async def get_double_puppet(self, user_id: UserID) -> BasePuppet | None:
-        pass
+    async def get_double_puppet(self, user_id: UserID) -> Puppet:
+        return await Puppet.get_by_custom_mxid(user_id)
 
     def is_bridge_ghost(self, user_id: UserID) -> bool:
-        pass
+        return bool(Puppet.get_id_from_mxid(user_id))
 
     async def count_logged_in_users(self) -> int:
-        pass
+        return 1
 
     async def start(self) -> None:
         User.init_cls(self)

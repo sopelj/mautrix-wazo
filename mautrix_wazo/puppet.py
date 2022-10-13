@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import contextlib
-from typing import cast
+from typing import cast, TYPE_CHECKING
 from uuid import UUID
 
 from mautrix.bridge import BasePuppet
@@ -15,10 +15,14 @@ from .config import Config
 from .db.puppet import Puppet as DBPuppet
 from .types import WazoUUID
 
+if TYPE_CHECKING:
+    from .__main__ import WazoBridge
+
 
 class Puppet(DBPuppet, BasePuppet):
     hs_domain: str
     mxid_template: SimpleTemplate[str]
+    bridge: WazoBridge
 
     config: Config
 
@@ -67,14 +71,20 @@ class Puppet(DBPuppet, BasePuppet):
         return UserID(cls.mxid_template.format_full(uuid))
 
     @classmethod
-    async def get_by_mxid(cls, mxid: UserID) -> BasePuppet | None:
+    async def get_by_mxid(cls, mxid: UserID, create=True) -> Puppet | None:
         wazo_uuid = cls.get_id_from_mxid(mxid)
         if not wazo_uuid:
             return None
-        return await cls.get_by_uuid(wazo_uuid)
+        puppet = await cls.get_by_uuid(wazo_uuid)
+        if puppet:
+            cls.by_uuid[wazo_uuid] = puppet
+            return puppet
+        if create is True:
+            return await cls._create_puppet_by_uuid(wazo_uuid)
+        return None
 
     @classmethod
-    async def get_by_custom_mxid(cls, mxid: UserID) -> BasePuppet:
+    async def get_by_custom_mxid(cls, mxid: UserID) -> Puppet:
         pass
 
     @classmethod
@@ -97,18 +107,21 @@ class Puppet(DBPuppet, BasePuppet):
             return puppet
 
         if create:
-            user_info = await cls._get_wazo_user_info(uuid)
-            puppet = cls(
-                wazo_uuid=uuid,
-                first_name=user_info['firstname'],
-                last_name=user_info['lastname'],
-                username=user_info['username'] or user_info['email'],
-            )
-            await puppet.insert()
-            puppet.by_uuid[uuid] = puppet
-            return puppet
-
+            return await cls._create_puppet_by_uuid(uuid)
         return None
 
     async def save(self) -> None:
         await self.update()
+
+    @classmethod
+    async def _create_puppet_by_uuid(cls, wazo_uuid):
+        user_info = await cls._get_wazo_user_info(wazo_uuid)
+        puppet = cls(
+            wazo_uuid=wazo_uuid,
+            first_name=user_info['firstname'],
+            last_name=user_info['lastname'],
+            username=user_info['username'] or user_info['email'],
+        )
+        await puppet.insert()
+        cls.by_uuid[wazo_uuid] = puppet
+        return puppet

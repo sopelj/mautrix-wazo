@@ -1,9 +1,8 @@
 from __future__ import annotations
 
 import contextlib
-from typing import AsyncIterable, Awaitable, TYPE_CHECKING, cast
+from typing import TYPE_CHECKING, cast
 
-from mautrix import bridge as br
 from mautrix.bridge import BaseUser, BasePortal, BasePuppet
 from mautrix.types import UserID, RoomID
 from mautrix.util.bridge_state import BridgeState
@@ -31,13 +30,10 @@ class User(DBUser, BaseUser):
         cls.az = bridge.az
         cls.loop = bridge.loop
 
-    async def is_logged_in(self) -> bool:
-        pass
-
     async def get_puppet(self) -> BasePuppet | None:
-        pass
+        return await Puppet.get_by_uuid(self.wazo_uuid)
 
-    async def get_portal_with(self, puppet: br.BasePuppet, create: bool = True) -> BasePortal | None:
+    async def get_portal_with(self, puppet: BasePuppet, create: bool = True) -> BasePortal | None:
         pass
 
     async def get_direct_chats(self) -> dict[UserID, list[RoomID]]:
@@ -49,6 +45,9 @@ class User(DBUser, BaseUser):
     def _add_to_cache(self):
         self.by_mxid[self.mxid] = self
         self.by_uuid[self.wazo_uuid] = self
+
+    async def is_logged_in(self) -> bool:
+        return True
 
     @classmethod
     async def get_by_mxid(cls, mxid: UserID, create: bool = True) -> User | None:
