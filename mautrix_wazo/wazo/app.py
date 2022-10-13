@@ -52,7 +52,7 @@ async def on_startup(app):
 async def receive_message(request: web.Request):
     body = await request.json()
     data = WazoHookMessageData.parse_obj(body)
-    app.logger.info("Received request")
+    request.app.logger.info("Received request")
     handler = request.app["wazo_handler"]
     if data.proxied:
         # message triggered by relayed matrix event, ignore
