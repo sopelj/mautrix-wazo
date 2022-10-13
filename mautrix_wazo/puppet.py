@@ -99,7 +99,7 @@ class Puppet(DBPuppet, BasePuppet):
         headers = {'X-Auth-Token': cls.bridge.config['wazo.api_token']}
 
         async with ClientSession() as session:
-            async with session.get(f'{base_url}/confd/1.1/api/users/{uuid}', headers=headers) as response:
+            async with session.get(f'{base_url}/confd/1.1/users/{uuid}', headers=headers) as response:
                 return await response.json()
 
     @classmethod

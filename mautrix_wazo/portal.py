@@ -61,7 +61,7 @@ class Portal(DBPortal, BasePortal):
             base_url = self.bridge.config['wazo.api_url']
             headers = {'X-Auth-Token': self.bridge.config['wazo.api_token']}
             async with ClientSession() as session:
-                url = f'/users/{sender.wazo_uuid}/rooms/{self.wazo_uuid}/messages'
+                url = f'{base_url}/chatd/1.0/users/{sender.wazo_uuid}/rooms/{self.wazo_uuid}/messages'
                 await session.post(url, headers=headers, json={'alias': '', 'content': message.body})
         else:
             self.log.exception(f"Failed to handle Matrix event {event_id}")
