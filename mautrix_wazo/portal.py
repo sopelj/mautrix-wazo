@@ -152,11 +152,7 @@ class Portal(DBPortal, BasePortal):
                 "type": str(StateHalfShotBridge),
                 "state_key": self.bridge_info_state_key,
                 "content": self.bridge_info,
-            },
-            {
-                "type": str(EventType.ROOM_POWER_LEVELS),
-                "content": power_levels.serialize(),
-            },
+            }
         ]
 
         if not self.mxid:
