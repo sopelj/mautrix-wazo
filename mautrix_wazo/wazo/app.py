@@ -74,7 +74,3 @@ async def receive_message(request: web.Request):
 
 app.add_routes([web.RouteDef("post", "/messages", receive_message, kwargs={})])
 
-
-def get_site(runner):
-    return web.TCPSite(runner, os.getenv("HOST", "0.0.0.0"), os.getenv("PORT", 8000))
-

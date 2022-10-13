@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import os
 
-from aiohttp import web
+from aiohttp.web import AppRunner, TCPSite
 from mautrix.bridge import Bridge, BaseUser, BasePortal, BasePuppet
 from mautrix.types import RoomID, UserID
 
@@ -25,12 +25,17 @@ class WazoBridge(Bridge):
     matrix_class = MatrixHandler
     upgrade_table = upgrade_table
 
+    wazo_runner: AppRunner
     config: Config
     matrix: MatrixHandler
 
     def prepare_db(self) -> None:
         super().prepare_db()
         init_db(self.db)
+
+    def prepare_bridge(self) -> None:
+        self.wazo_runner = AppRunner(wazo_app.app)
+        super().prepare_bridge()
 
     async def get_user(self, user_id: UserID, create: bool = True) -> BaseUser | None:
         pass
@@ -51,19 +56,19 @@ class WazoBridge(Bridge):
         pass
 
     async def start(self) -> None:
-        runner = web.AppRunner(wazo_app.app)
-
         async def wazo_http_startup():
             self.log.info("Starting wazo webhook server")
-            await runner.setup()
-            site = web.TCPSite(runner, os.getenv("HOST", "0.0.0.0"), os.getenv("PORT", 8000))
+            await self.wazo_runner.setup()
+            site = TCPSite(self.wazo_runner, "0.0.0.0", 5000)
 
             await site.start()
             self.log.debug("Wazo webhook server site: %s", site.name)
 
         self.add_startup_actions(wazo_http_startup())
-        self.add_shutdown_actions(runner.cleanup())
         await super().start()
+
+    def prepare_stop(self) -> None:
+        self.add_shutdown_actions(self.wazo_runner.cleanup())
 
 
 WazoBridge().run()

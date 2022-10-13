@@ -10,3 +10,5 @@ class Config(BaseBridgeConfig):
         copy, copy_dict, base = helper
 
         copy("bridge.username_template")
+        copy("wazo.api_token")
+        copy("wazo.api_url")
