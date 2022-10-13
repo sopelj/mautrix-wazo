@@ -5,6 +5,7 @@ from typing import Any
 from aiohttp import ClientSession
 from mautrix.appservice import IntentAPI
 from mautrix.bridge import BasePortal, BasePuppet
+from mautrix.errors import MatrixError
 from mautrix.types import MessageEventContent, EventID, TextMessageEventContent, MessageType, EventType, UserID
 
 from .config import Config
@@ -162,6 +163,11 @@ class Portal(DBPortal, BasePortal):
             self.mxid = room_id
             self.by_mxid[room_id] = self
             await self.save()
+            try:
+                source_puppet = await Puppet.get_by_custom_mxid(source.mxid)
+                await source_puppet.intent.join_room_by_id(self.mxid)
+            except MatrixError as ex:
+                self.log.exception("Error joining user in newly created room")
 
         if participants:
             assert source.mxid in participants
@@ -169,7 +175,7 @@ class Portal(DBPortal, BasePortal):
                 extra_content = {
                     "fi.mau.will_auto_accept": True
                 } if uid == source.mxid else {}
+                try:
                 await self.main_intent.invite_user(self.mxid, uid, extra_content=extra_content)
-        source_puppet = await Puppet.get_by_custom_mxid(source.mxid)
-        await source_puppet.intent.join_room_by_id(self.mxid)
+
         return self.mxid
