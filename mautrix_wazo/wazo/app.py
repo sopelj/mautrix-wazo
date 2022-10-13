@@ -51,7 +51,7 @@ def wazo_handler_provider() -> WazoWebhookHandler:
     return WazoWebhookHandler()
 
 
-@app.post("/message")
+@app.post("/messages")
 async def receive_message(data: WazoHookMessageData, handler: WazoWebhookHandler = fastapi.Depends(wazo_handler_provider)):
     await handler.handle_message(WazoMessage(
         event_id=WazoUUID(data.event_id),
