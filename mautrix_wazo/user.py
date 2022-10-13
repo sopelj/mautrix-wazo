@@ -6,7 +6,7 @@ from mautrix.types import UserID, RoomID
 from mautrix.util.bridge_state import BridgeState
 
 from .db.user import User as DBUser
-from .types import WazoUserId
+from .types import WazoUUID
 
 
 class UserError(Exception):
@@ -30,10 +30,10 @@ class User(DBUser, BaseUser):
         pass
 
     @classmethod
-    def get_by_wazo_id(cls, wazo_user_id: WazoUserId, create=True):
+    def get_by_wazo_id(cls, wazo_user_id: WazoUUID, create=True):
         # TODO: get or create/register a user object representing a wazo and matrix user
         if create:
-            return cls(wazo_id=wazo_user_id)
+            return cls(wazo_uuid=wazo_user_id)
         else:
             raise UserError
 

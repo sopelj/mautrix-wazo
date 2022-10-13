@@ -6,7 +6,7 @@ import pydantic
 import uvicorn
 
 from mautrix_wazo.wazo.handler import WazoWebhookHandler
-from mautrix_wazo.types import WazoMessage, WazoRoomId, WazoEventId, WazoUserId
+from mautrix_wazo.types import WazoMessage, WazoUUID
 
 app = fastapi.FastAPI(
 
@@ -54,12 +54,12 @@ def wazo_handler_provider() -> WazoWebhookHandler:
 @app.post("/message")
 async def receive_message(data: WazoHookMessageData, handler: WazoWebhookHandler = fastapi.Depends(wazo_handler_provider)):
     await handler.handle_message(WazoMessage(
-        event_id=WazoEventId(data.event_id),
-        sender_id=WazoUserId(data.user_id),
-        room_id=WazoRoomId(data.room_id),
+        event_id=WazoUUID(data.event_id),
+        sender_id=WazoUUID(data.user_id),
+        room_id=WazoUUID(data.room_id),
         content=data.content,
         participants=[
-            WazoUserId(p)
+            WazoUUID(p)
             for p in data.participants
         ],
         created_at=data.created_at,
@@ -68,6 +68,6 @@ async def receive_message(data: WazoHookMessageData, handler: WazoWebhookHandler
 
 async def serve():
     """Start the server using uvicorn"""
-    config = uvicorn.Config(app, port=5000, log_level="info")
+    config = uvicorn.Config(app, host='0.0.0.0', port=5000, log_level="info")
     server = uvicorn.Server(config)
     await server.serve()

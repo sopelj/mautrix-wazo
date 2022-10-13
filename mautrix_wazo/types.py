@@ -1,21 +1,17 @@
+from __future__ import annotations
+
 from dataclasses import dataclass
 from datetime import datetime
-from typing import NewType, List
+from typing import NewType
 
 WazoUUID = NewType("WazoUUID", str)
-
-WazoEventId = NewType("WazoEventId", str)
-
-WazoUserId = NewType("WazoUserId", str)
-
-WazoRoomId = NewType("WazoRoomId", str)
 
 
 @dataclass
 class WazoMessage:
-    event_id: WazoEventId
-    sender_id: WazoUserId
-    room_id: WazoRoomId
+    event_id: WazoUUID
+    sender_id: WazoUUID
+    room_id: WazoUUID
     created_at: datetime
     content: str
-    participants: List[WazoUserId]
+    participants: list[WazoUUID]

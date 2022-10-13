@@ -1,12 +1,13 @@
 from __future__ import annotations
-from typing import Any, List
+
+from typing import Any
 
 from mautrix import bridge as br
 from mautrix.bridge import BasePortal, BasePuppet
 from mautrix.types import MessageEventContent, EventID
 
 from .db.portal import Portal as DBPortal
-from .types import WazoMessage, WazoUserId, WazoRoomId
+from .types import WazoMessage, WazoUUID
 from .user import User
 
 
@@ -44,7 +45,7 @@ class Portal(DBPortal, BasePortal):
         pass
 
     @classmethod
-    async def get_by_wazo_room_id(cls, room_id: WazoRoomId, create=True):
+    async def get_by_wazo_room_id(cls, room_id: WazoUUID, create=True):
         try:
             return await cls.store.get_portal(dict(wazo_room_id=room_id))
         except KeyError:
@@ -57,5 +58,5 @@ class Portal(DBPortal, BasePortal):
     async def handle_wazo_message(self, sender: User, message: WazoMessage):
         await self.create_matrix_room(participants=message.participants)
 
-    async def create_matrix_room(self, participants: List[WazoUserId]):
+    async def create_matrix_room(self, participants: list[WazoUUID]):
         pass
