@@ -134,21 +134,21 @@ class Portal(DBPortal, BasePortal):
         self.log.info("message dispatched to matrix (event_id=%s)", event_id)
         return event_id
 
-    async def create_matrix_room(self, source: User, participants: list[UserID] = None):
+    async def create_matrix_room(self, source: User, participants: list[UserID] = None, name=None):
         assert self.wazo_uuid
 
         # actually create a new matrix room
         await self._postinit()
-        room_id = await self.main_intent.create_room()
+        if self.mxid:
+            room_id = await self.main_intent.create_room(name=name)
+            self.mxid = room_id
+            self.by_mxid[room_id] = self
 
-        self.mxid = room_id
-
-        self.by_mxid[room_id] = self
         if participants:
             assert source.mxid in participants
             for uid in participants:
-                await self.main_intent.invite_user(room_id, uid)
+                await self.main_intent.invite_user(self.mxid, uid)
         source_puppet = await Puppet.get_by_custom_mxid(source.mxid)
+        await self.main_intent.invite_user(self.mxid, source.mxid)
         await source_puppet.intent.join_room_by_id(self.mxid)
-
-        return room_id
+        return self.mxid
