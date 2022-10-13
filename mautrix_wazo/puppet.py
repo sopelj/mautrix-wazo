@@ -31,6 +31,7 @@ class Puppet(DBPuppet, BasePuppet):
     default_mxid: UserID
 
     by_uuid: dict[WazoUUID, Puppet] = {}
+    by_custom_mxid: dict[UserID, Puppet] = {}
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -91,9 +92,24 @@ class Puppet(DBPuppet, BasePuppet):
             return await cls._create_puppet_by_uuid(wazo_uuid)
         return None
 
+    def _add_to_cache(self):
+        if self.custom_mxid:
+            self.by_custom_mxid[self.custom_mxid] = self
+        self.by_uuid[self.wazo_uuid] = self
+
     @classmethod
-    async def get_by_custom_mxid(cls, mxid: UserID) -> Puppet:
-        pass
+    async def get_by_custom_mxid(cls, mxid: UserID) -> Puppet | None:
+        try:
+            return cls.by_custom_mxid[mxid]
+        except KeyError:
+            pass
+
+        puppet = cast(cls, await super().get_by_custom_mxid(mxid))
+        if puppet:
+            puppet._add_to_cache()
+            return puppet
+
+        return None
 
     @classmethod
     async def _get_wazo_user_info(cls, uuid: WazoUUID) -> dict[str, str]:
@@ -115,7 +131,7 @@ class Puppet(DBPuppet, BasePuppet):
 
         puppet = cast(cls, await super().get_by_uuid(uuid))
         if puppet is not None:
-            puppet.by_uuid[uuid] = puppet
+            puppet._add_to_cache()
             return puppet
 
         if create:
@@ -137,5 +153,5 @@ class Puppet(DBPuppet, BasePuppet):
             custom_mxid='',
         )
         await puppet.insert()
-        cls.by_uuid[wazo_uuid] = puppet
+        puppet._add_to_cache()
         return puppet

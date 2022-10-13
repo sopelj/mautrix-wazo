@@ -134,7 +134,7 @@ class Portal(DBPortal, BasePortal):
         self.log.info("message dispatched to matrix (event_id=%s)", event_id)
         return event_id
 
-    async def create_matrix_room(self, source: User, participants: list[UserID]=None):
+    async def create_matrix_room(self, source: User, participants: list[UserID] = None):
         assert self.wazo_uuid
 
         # actually create a new matrix room

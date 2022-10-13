@@ -4,6 +4,7 @@ from typing import ClassVar
 
 from asyncpg.protocol.protocol import Record
 from attr import dataclass
+from mautrix.types import UserID
 from mautrix.util.async_db import Database
 
 from mautrix_wazo.types import WazoUUID
@@ -18,7 +19,7 @@ class Puppet:
     last_name: str
     username: str
     is_registered: bool
-    custom_mxid: str | None
+    custom_mxid: UserID | None
 
     columns = 'wazo_uuid, first_name, last_name, username, is_registered, custom_mxid'
 
