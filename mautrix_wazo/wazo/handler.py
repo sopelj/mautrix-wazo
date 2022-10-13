@@ -84,7 +84,7 @@ class WazoWebhookHandler:
                 self.logger.info("Created corresponding matrix room(%s)", room_id)
 
         try:
-            sender_matrix_user = next(u for u in mapped_participants if u.wazo_uuid == message.sender_id and u.mxid)
+            sender_matrix_user = next(u for u in mapped_participants if u and u.wazo_uuid == message.sender_id and u.mxid)
         except StopIteration:
             sender_puppet = await Puppet.get_by_uuid(message.sender_id, create=True)
         else:
