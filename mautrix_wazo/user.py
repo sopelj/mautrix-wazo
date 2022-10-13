@@ -8,7 +8,6 @@ from mautrix.types import UserID, RoomID
 from mautrix.util.bridge_state import BridgeState, BridgeStateEvent
 
 from .db.user import User as DBUser
-from .portal import Portal
 from .puppet import Puppet
 from .types import WazoUUID
 
