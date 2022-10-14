@@ -52,8 +52,9 @@ class WazoWebhookHandler:
         portal: Portal = await Portal.get_by_wazo_id(message.room_id, create=True)
 
         mapped_participants = [
-            await User.get_by_uuid(p)
+            user
             for p in message.participants
+            if (user := await User.get_by_uuid(p))
         ]
         if not any(mapped_participants):
             self.logger.info("No participant in room has an associated matrix id. Ignoring.")
@@ -84,11 +85,17 @@ class WazoWebhookHandler:
                 self.logger.info("Created corresponding matrix room(%s)", room_id)
 
         try:
-            sender_matrix_user = next(u for u in mapped_participants if u and u.wazo_uuid == message.sender_id and u.mxid)
+            sender_matrix_user = next(u for u in mapped_participants if (u.wazo_uuid == message.sender_id))
+            assert sender_matrix_user.mxid
         except StopIteration:
             sender_puppet = await Puppet.get_by_uuid(message.sender_id, create=True)
+            self.logger.info("Sender(wazo id %s) has no custom matrix user registered, using auto-generated user(mxid %s)",
+                             message.sender_id, sender_puppet.mxid)
         else:
             sender_puppet = await Puppet.get_by_custom_mxid(sender_matrix_user.mxid)
+            self.logger.info(
+                "Sender(wazo id %s) has custom matrix user registered(mxid %s)!",
+                message.sender_id, sender_puppet.mxid)
 
         assert sender_puppet.mxid
         self.logger.info("Message sender: (wazo id %s, matrix id %s)", sender_puppet.wazo_uuid, sender_puppet.mxid)
