@@ -26,3 +26,6 @@ class MatrixHandler(BaseMatrixHandler):
     @staticmethod
     async def allow_command(user: User) -> bool:
         return True
+
+    async def allow_message(self, user: User) -> bool:
+        return True

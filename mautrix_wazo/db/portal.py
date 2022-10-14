@@ -29,6 +29,12 @@ class Portal:
         if row:
             return cls(mxid=row["mxid"], wazo_uuid=row["wazo_uuid"])
 
+    @classmethod
+    async def get_by_mxid(cls, mxid: RoomID):
+        row = await cls.db.fetchrow("SELECT * FROM portal where mxid = $1", mxid)
+        if row:
+            return cls(mxid=row["mxid"], wazo_uuid=row["wazo_uuid"])
+
     async def update(self):
         await self.db.execute(
             "UPDATE portal SET wazo_uuid=$1, mxid=$2 WHERE wazo_uuid=$1",
