@@ -129,10 +129,16 @@ class Portal(DBPortal, BasePortal):
                       message.event_id, puppet.wazo_uuid, message.room_id)
         assert self.mxid, "cannot handle message before matrix room has been associated to portal"
 
+        try:
+            formatted_body = markdown(message.content, extensions=['extra'])
+        except Exception as e:
+            self.log.error(f'Failed to parse markdown {e}')
+            formatted_body = message.content
+
         content = TextMessageEventContent(
             msgtype=MessageType.TEXT,
             format=Format.HTML,
-            formatted_body=markdown(message.content),
+            formatted_body=formatted_body,
             body=message.content
         )
         event_id = await self._send_message(
