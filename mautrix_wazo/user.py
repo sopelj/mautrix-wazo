@@ -28,6 +28,7 @@ class User(DBUser, BaseUser):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
+        BaseUser.__init__(self)
         perms = self.config.get_permissions(self.mxid)
         self.relay_whitelisted, self.is_whitelisted, self.is_admin, self.permission_level = perms
 
