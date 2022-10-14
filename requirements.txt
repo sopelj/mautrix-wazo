@@ -6,3 +6,4 @@ aiohttp
 ruamel.yaml>=0.15.35,<0.18
 commonmark>=0.8,<0.10
 pydantic>=1.10.2
+markdown

@@ -2,11 +2,12 @@ from __future__ import annotations
 
 from typing import Any
 
+from markdown import markdown
 from aiohttp import ClientSession
 from mautrix.appservice import IntentAPI
 from mautrix.bridge import BasePortal, BasePuppet
 from mautrix.errors import MatrixError
-from mautrix.types import MessageEventContent, EventID, TextMessageEventContent, MessageType, EventType, UserID
+from mautrix.types import MessageEventContent, EventID, TextMessageEventContent, MessageType, EventType, UserID, Format
 
 from .config import Config
 from .db.portal import Portal as DBPortal
@@ -130,6 +131,8 @@ class Portal(DBPortal, BasePortal):
 
         content = TextMessageEventContent(
             msgtype=MessageType.TEXT,
+            format=Format.HTML,
+            formatted_body=markdown(message.content),
             body=message.content
         )
         event_id = await self._send_message(
@@ -141,7 +144,6 @@ class Portal(DBPortal, BasePortal):
 
     async def create_matrix_room(self, source: User, participants: list[UserID] = None, name=None):
         assert self.wazo_uuid
-        #await self._postinit()
 
         # actually create a new matrix room
         initial_state = [
