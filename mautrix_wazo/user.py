@@ -22,6 +22,14 @@ class UserError(Exception):
 class User(DBUser, BaseUser):
     by_mxid: dict[UserID, User] = {}
     by_uuid: dict[WazoUUID, User] = {}
+    relay_whitelisted: bool
+    is_admin: bool
+    permission_level: str
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        perms = self.config.get_permissions(self.mxid)
+        self.relay_whitelisted, self.is_whitelisted, self.is_admin, self.permission_level = perms
 
     @classmethod
     def init_cls(cls, bridge: "WazoBridge") -> None:
