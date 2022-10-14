@@ -25,7 +25,7 @@ class Puppet:
     next_batch: SyncToken | None
     base_url: URL | None
 
-    columns = 'wazo_uuid, first_name, last_name, username, is_registered, custom_mxid, access_token'
+    columns = 'wazo_uuid, first_name, last_name, username, is_registered, custom_mxid, access_token, next_batch, base_url'
 
     async def insert(self) -> None:
         await self.db.execute(
