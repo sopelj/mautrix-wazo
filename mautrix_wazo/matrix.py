@@ -22,3 +22,7 @@ class MatrixHandler(BaseMatrixHandler):
 
     async def allow_bridging_message(self, user: User, portal: Portal) -> bool:
         return await user.is_logged_in()
+
+    @staticmethod
+    async def allow_command(user: User) -> bool:
+        return True
